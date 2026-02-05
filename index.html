@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>打地鼠 🔨🐹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .stat-value.score {
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .stat-value.time {
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .hole {
+            aspect-ratio: 1;
+            background: linear-gradient(180deg, #2d1f0f 0%, #1a1208 100%);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 
+                inset 0 8px 16px rgba(0, 0, 0, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease;
+        }
+
+        .hole:active {
+            transform: scale(0.95);
+        }
+
+        .hole::before {
+            content: '';
+            position: absolute;
+            top: 60%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #3d2914 0%, #2a1c0d 100%);
+            border-radius: 0 0 50% 50%;
+        }
+
+        .mole {
+            position: absolute;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 80%;
+            transition: bottom 0.15s ease-out;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+        }
+
+        .hole.active .mole {
+            bottom: 10%;
+        }
+
+        .mole.hit {
+            animation: hitAnimation 0.3s ease-out;
+        }
+
+        @keyframes hitAnimation {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.3) rotate(10deg); }
+            100% { transform: translateX(-50%) scale(0); }
+        }
+
+        .hit-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .hit-effect.show {
+            animation: scorePopup 0.5s ease-out;
+        }
+
+        @keyframes scorePopup {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -80%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -120%) scale(1);
+            }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-start:active {
+            transform: translateY(0);
+        }
+
+        .btn-start:disabled {
+            background: linear-gradient(135deg, #666 0%, #444 100%);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .difficulty {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .diff-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .diff-btn.active {
+            border-color: #00d4ff;
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .diff-btn:hover:not(.active) {
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .game-over.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .game-over-content {
+            text-align: center;
+            color: #fff;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .game-over.show .game-over-content {
+            transform: scale(1);
+        }
+
+        .game-over h2 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            color: #ffd700;
+        }
+
+        .final-score {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .high-score {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 32px;
+        }
+
+        .new-record {
+            color: #ff6b6b;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .game-over .btn {
+            width: auto;
+            padding: 16px 48px;
+        }
+
+        .combo {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .combo.show {
+            opacity: 1;
+            animation: comboShake 0.5s ease;
+        }
+
+        @keyframes comboShake {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            25% { transform: translateX(-50%) scale(1.1) rotate(-5deg); }
+            75% { transform: translateX(-50%) scale(1.1) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🔨 打地鼠 🐹</h1>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">得分</div>
+                <div class="stat-value score" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">时间</div>
+                <div class="stat-value time" id="time">30</div>
+            </div>
+        </div>
+
+        <div class="difficulty">
+            <button class="diff-btn active" data-speed="1000">简单</button>
+            <button class="diff-btn" data-speed="700">普通</button>
+            <button class="diff-btn" data-speed="450">困难</button>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <div class="hole" data-index="0">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="1">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="2">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="3">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="4">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="5">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="6">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="7">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+            <div class="hole" data-index="8">
+                <div class="mole">🐹</div>
+                <div class="hit-effect">+10</div>
+            </div>
+        </div>
+
+        <button class="btn btn-start" id="startBtn">开始游戏</button>
+    </div>
+
+    <div class="combo" id="combo"></div>
+
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>游戏结束!</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <div class="high-score" id="highScoreText">最高分: 0</div>
+            <button class="btn btn-start" id="restartBtn">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        class WhackAMole {
+            constructor() {
+                this.score = 0;
+                this.timeLeft = 30;
+                this.isPlaying = false;
+                this.moleSpeed = 1000;
+                this.combo = 0;
+                this.lastHitTime = 0;
+                this.highScore = parseInt(localStorage.getItem('whackamole-highscore')) || 0;
+
+                this.holes = document.querySelectorAll('.hole');
+                this.scoreDisplay = document.getElementById('score');
+                this.timeDisplay = document.getElementById('time');
+                this.startBtn = document.getElementById('startBtn');
+                this.gameOver = document.getElementById('gameOver');
+                this.finalScore = document.getElementById('finalScore');
+                this.highScoreText = document.getElementById('highScoreText');
+                this.restartBtn = document.getElementById('restartBtn');
+                this.comboDisplay = document.getElementById('combo');
+                this.diffBtns = document.querySelectorAll('.diff-btn');
+
+                this.moleTimer = null;
+                this.gameTimer = null;
+                this.currentMole = null;
+
+                this.init();
+            }
+
+            init() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.restartBtn.addEventListener('click', () => this.restartGame());
+
+                this.holes.forEach(hole => {
+                    hole.addEventListener('click', () => this.whack(hole));
+                    hole.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.whack(hole);
+                    }, { passive: false });
+                });
+
+                this.diffBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (this.isPlaying) return;
+                        this.diffBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.moleSpeed = parseInt(btn.dataset.speed);
+                    });
+                });
+
+                this.highScoreText.textContent = `最高分: ${this.highScore}`;
+            }
+
+            startGame() {
+                this.score = 0;
+                this.timeLeft = 30;
+                this.combo = 0;
+                this.isPlaying = true;
+                this.updateScore();
+                this.updateTime();
+                this.startBtn.disabled = true;
+                this.startBtn.textContent = '游戏中...';
+
+                this.showMole();
+                this.gameTimer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTime();
+                    if (this.timeLeft <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+            }
+
+            showMole() {
+                if (!this.isPlaying) return;
+
+                // Hide current mole
+                if (this.currentMole) {
+                    this.currentMole.classList.remove('active');
+                }
+
+                // Pick random hole
+                const randomIndex = Math.floor(Math.random() * this.holes.length);
+                const hole = this.holes[randomIndex];
+                
+                hole.classList.add('active');
+                this.currentMole = hole;
+
+                // Schedule next mole
+                const variation = Math.random() * 400 - 200;
+                this.moleTimer = setTimeout(() => {
+                    if (hole.classList.contains('active')) {
+                        hole.classList.remove('active');
+                        this.combo = 0; // Reset combo if missed
+                    }
+                    this.showMole();
+                }, this.moleSpeed + variation);
+            }
+
+            whack(hole) {
+                if (!this.isPlaying || !hole.classList.contains('active')) return;
+
+                const mole = hole.querySelector('.mole');
+                const hitEffect = hole.querySelector('.hit-effect');
+
+                // Calculate points with combo
+                const now = Date.now();
+                if (now - this.lastHitTime < 1500) {
+                    this.combo++;
+                } else {
+                    this.combo = 1;
+                }
+                this.lastHitTime = now;
+
+                let points = 10;
+                if (this.combo >= 3) {
+                    points = 10 * this.combo;
+                    this.showCombo();
+                }
+
+                hitEffect.textContent = `+${points}`;
+
+                this.score += points;
+                this.updateScore();
+
+                // Animations
+                mole.classList.add('hit');
+                hitEffect.classList.add('show');
+                hole.classList.remove('active');
+
+                // Vibrate on mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+
+                setTimeout(() => {
+                    mole.classList.remove('hit');
+                    hitEffect.classList.remove('show');
+                }, 300);
+            }
+
+            showCombo() {
+                this.comboDisplay.textContent = `🔥 ${this.combo}连击! x${this.combo}`;
+                this.comboDisplay.classList.add('show');
+                setTimeout(() => {
+                    this.comboDisplay.classList.remove('show');
+                }, 1000);
+            }
+
+            updateScore() {
+                this.scoreDisplay.textContent = this.score;
+            }
+
+            updateTime() {
+                this.timeDisplay.textContent = this.timeLeft;
+                if (this.timeLeft <= 10) {
+                    this.timeDisplay.style.color = '#ff6b6b';
+                } else {
+                    this.timeDisplay.style.color = '#00d4ff';
+                }
+            }
+
+            endGame() {
+                this.isPlaying = false;
+                clearTimeout(this.moleTimer);
+                clearInterval(this.gameTimer);
+
+                if (this.currentMole) {
+                    this.currentMole.classList.remove('active');
+                }
+
+                // Check high score
+                const isNewRecord = this.score > this.highScore;
+                if (isNewRecord) {
+                    this.highScore = this.score;
+                    localStorage.setItem('whackamole-highscore', this.highScore);
+                }
+
+                // Show game over screen
+                this.finalScore.textContent = this.score;
+                if (isNewRecord) {
+                    this.highScoreText.innerHTML = '<span class="new-record">🎉 新纪录!</span>';
+                } else {
+                    this.highScoreText.textContent = `最高分: ${this.highScore}`;
+                }
+                this.gameOver.classList.add('show');
+
+                this.startBtn.disabled = false;
+                this.startBtn.textContent = '开始游戏';
+            }
+
+            restartGame() {
+                this.gameOver.classList.remove('show');
+                setTimeout(() => this.startGame(), 300);
+            }
+        }
+
+        // Initialize game
+        document.addEventListener('DOMContentLoaded', () => {
+            new WhackAMole();
+        });
+    </script>
+</body>
+</html>
