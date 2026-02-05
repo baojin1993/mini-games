@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>🤖 Robot Face</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a0f;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #0d0d12 0%, #1a1a24 50%, #0d0d12 100%);
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        .robot-face {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transform-origin: center;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .eye-socket {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(145deg, #2a2a35 0%, #1a1a22 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                inset 0 4px 20px rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(0, 200, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .eye-socket::before {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 10%;
+            width: 30%;
+            height: 20%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+            border-radius: 50%;
+        }
+
+        .eye {
+            width: 110px;
+            height: 110px;
+            background: radial-gradient(circle at 30% 30%, #00e5ff 0%, #00b8d4 30%, #0088a3 60%, #005f73 100%);
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 0 20px rgba(0, 229, 255, 0.5),
+                0 0 40px rgba(0, 229, 255, 0.3),
+                inset 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .pupil {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle at 40% 40%, #1a1a24 0%, #000 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+            box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+
+        .pupil::before {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            top: 20%;
+            left: 20%;
+        }
+
+        .pupil::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            bottom: 25%;
+            right: 25%;
+        }
+
+        /* Eyelids */
+        .eyelid-top, .eyelid-bottom {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            background: #1a1a22;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .eyelid-top {
+            top: 0;
+            transform-origin: top center;
+            transform: scaleY(0);
+            border-radius: 50% 50% 0 0;
+        }
+
+        .eyelid-bottom {
+            bottom: 0;
+            transform-origin: bottom center;
+            transform: scaleY(0);
+            border-radius: 0 0 50% 50%;
+        }
+
+        /* Expressions */
+        .robot-face.blink .eyelid-top,
+        .robot-face.blink .eyelid-bottom {
+            transform: scaleY(1);
+        }
+
+        .robot-face.sleepy .eyelid-top {
+            transform: scaleY(0.6);
+        }
+
+        .robot-face.sleepy .eye {
+            filter: brightness(0.7);
+        }
+
+        .robot-face.happy .eye {
+            transform: scaleY(0.7);
+            box-shadow: 
+                0 0 30px rgba(0, 229, 255, 0.8),
+                0 0 60px rgba(0, 229, 255, 0.5);
+        }
+
+        .robot-face.happy .eyelid-bottom {
+            transform: scaleY(0.3);
+        }
+
+        .robot-face.surprised .eye {
+            transform: scale(1.15);
+        }
+
+        .robot-face.surprised .pupil {
+            transform: translate(-50%, -50%) scale(0.7);
+        }
+
+        .robot-face.sad .eyelid-top {
+            transform: scaleY(0.3) rotate(-10deg);
+        }
+
+        .robot-face.sad .eye-socket:last-child .eyelid-top {
+            transform: scaleY(0.3) rotate(10deg);
+        }
+
+        .robot-face.angry .eyelid-top {
+            transform: scaleY(0.4) rotate(15deg);
+        }
+
+        .robot-face.angry .eye-socket:last-child .eyelid-top {
+            transform: scaleY(0.4) rotate(-15deg);
+        }
+
+        .robot-face.angry .eye {
+            background: radial-gradient(circle at 30% 30%, #ff6b6b 0%, #ee5a5a 30%, #cc4444 60%, #aa3333 100%);
+            box-shadow: 
+                0 0 20px rgba(255, 107, 107, 0.5),
+                0 0 40px rgba(255, 107, 107, 0.3);
+        }
+
+        .robot-face.love .eye {
+            background: radial-gradient(circle at 30% 30%, #ff69b4 0%, #ff1493 30%, #db1093 60%, #aa0077 100%);
+            box-shadow: 
+                0 0 30px rgba(255, 105, 180, 0.8),
+                0 0 60px rgba(255, 105, 180, 0.5);
+        }
+
+        .robot-face.love .pupil {
+            background: none;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .robot-face.love .pupil::before,
+        .robot-face.love .pupil::after {
+            display: none;
+        }
+
+        /* Antenna */
+        .antenna {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 50px;
+            background: linear-gradient(180deg, #3a3a45 0%, #2a2a35 100%);
+            border-radius: 3px;
+        }
+
+        .antenna::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 30% 30%, #00ff88 0%, #00cc6a 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+            animation: antennaPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes antennaPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 15px rgba(0, 255, 136, 0.8); }
+            50% { opacity: 0.6; box-shadow: 0 0 25px rgba(0, 255, 136, 1); }
+        }
+
+        /* Expression indicator */
+        .expression-label {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* ZZZ for sleeping */
+        .zzz {
+            position: absolute;
+            top: -40px;
+            right: -60px;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .robot-face.sleepy .zzz {
+            opacity: 1;
+            animation: floatZzz 2s ease-in-out infinite;
+        }
+
+        @keyframes floatZzz {
+            0%, 100% { transform: translateY(0) rotate(-10deg); }
+            50% { transform: translateY(-15px) rotate(10deg); }
+        }
+
+        /* Sweat drop for nervous */
+        .sweat {
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            width: 12px;
+            height: 18px;
+            background: linear-gradient(180deg, rgba(100, 200, 255, 0.8) 0%, rgba(100, 200, 255, 0.4) 100%);
+            border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .robot-face.nervous .sweat {
+            opacity: 1;
+            animation: drip 1s ease-in-out infinite;
+        }
+
+        @keyframes drip {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(30px); opacity: 0; }
+        }
+
+        .robot-face.nervous .eye {
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        /* Sparkles for excited */
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .robot-face.excited .sparkle {
+            animation: sparkle 0.8s ease-in-out infinite;
+        }
+
+        .sparkle:nth-child(1) { top: -30px; left: 20%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: -20px; right: 20%; animation-delay: 0.2s; }
+        .sparkle:nth-child(3) { top: 0; left: 0; animation-delay: 0.4s; }
+        .sparkle:nth-child(4) { top: 0; right: 0; animation-delay: 0.6s; }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        .robot-face.excited .eye {
+            animation: bounce 0.5s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Thinking */
+        .robot-face.thinking .pupil {
+            animation: thinkLook 3s ease-in-out infinite;
+        }
+
+        @keyframes thinkLook {
+            0%, 100% { transform: translate(-30%, -60%); }
+            50% { transform: translate(-70%, -60%); }
+        }
+
+        .robot-face.thinking .eyelid-top {
+            transform: scaleY(0.15);
+        }
+
+        /* Dizzy */
+        .robot-face.dizzy .pupil {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg) translateX(10px); }
+            to { transform: translate(-50%, -50%) rotate(360deg) translateX(10px); }
+        }
+
+        .robot-face.dizzy .eye {
+            background: radial-gradient(circle at 30% 30%, #ffeb3b 0%, #ffc107 30%, #ff9800 60%, #f57c00 100%);
+        }
+
+        /* Touch feedback */
+        .robot-face.touched {
+            transform: scale(1.05);
+        }
+
+        .robot-face.touched .eye {
+            box-shadow: 
+                0 0 40px rgba(0, 229, 255, 1),
+                0 0 80px rgba(0, 229, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="robot-face" id="robotFace">
+            <div class="antenna"></div>
+            <div class="zzz">💤</div>
+            <div class="sweat"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            
+            <div class="eye-socket">
+                <div class="eyelid-top"></div>
+                <div class="eyelid-bottom"></div>
+                <div class="eye" id="leftEye">
+                    <div class="pupil" id="leftPupil"></div>
+                </div>
+            </div>
+            
+            <div class="eye-socket">
+                <div class="eyelid-top"></div>
+                <div class="eyelid-bottom"></div>
+                <div class="eye" id="rightEye">
+                    <div class="pupil" id="rightPupil"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="expression-label" id="expressionLabel">idle</div>
+    </div>
+
+    <script>
+        class RobotFace {
+            constructor() {
+                this.face = document.getElementById('robotFace');
+                this.leftPupil = document.getElementById('leftPupil');
+                this.rightPupil = document.getElementById('rightPupil');
+                this.label = document.getElementById('expressionLabel');
+                this.container = document.getElementById('container');
+                
+                this.currentExpression = 'idle';
+                this.isInteracting = false;
+                this.lastInteraction = Date.now();
+                
+                this.expressions = [
+                    { name: 'idle', duration: 3000, weight: 3 },
+                    { name: 'lookLeft', duration: 2000, weight: 2 },
+                    { name: 'lookRight', duration: 2000, weight: 2 },
+                    { name: 'lookUp', duration: 1500, weight: 1 },
+                    { name: 'lookDown', duration: 1500, weight: 1 },
+                    { name: 'blink', duration: 300, weight: 4 },
+                    { name: 'doubleBlink', duration: 600, weight: 2 },
+                    { name: 'sleepy', duration: 4000, weight: 1 },
+                    { name: 'happy', duration: 2500, weight: 2 },
+                    { name: 'surprised', duration: 1500, weight: 1 },
+                    { name: 'sad', duration: 2500, weight: 1 },
+                    { name: 'thinking', duration: 3500, weight: 1 },
+                    { name: 'excited', duration: 2000, weight: 1 },
+                    { name: 'nervous', duration: 2000, weight: 1 },
+                    { name: 'dizzy', duration: 2500, weight: 1 },
+                    { name: 'love', duration: 2500, weight: 1 },
+                    { name: 'curious', duration: 2500, weight: 2 },
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                // Touch interaction
+                this.container.addEventListener('touchstart', (e) => this.onTouch(e));
+                this.container.addEventListener('mousedown', (e) => this.onTouch(e));
+                this.container.addEventListener('touchend', () => this.onTouchEnd());
+                this.container.addEventListener('mouseup', () => this.onTouchEnd());
+                
+                // Follow touch/mouse
+                this.container.addEventListener('touchmove', (e) => this.followPointer(e.touches[0]));
+                this.container.addEventListener('mousemove', (e) => this.followPointer(e));
+                
+                // Start expression loop
+                this.nextExpression();
+                
+                // Idle blink timer
+                setInterval(() => {
+                    if (this.currentExpression === 'idle' && Math.random() < 0.3) {
+                        this.blink();
+                    }
+                }, 3000);
+            }
+            
+            onTouch(e) {
+                this.isInteracting = true;
+                this.lastInteraction = Date.now();
+                this.face.classList.add('touched');
+                
+                // Random reaction to touch
+                const reactions = ['happy', 'surprised', 'love', 'excited'];
+                const reaction = reactions[Math.floor(Math.random() * reactions.length)];
+                this.setExpression(reaction);
+            }
+            
+            onTouchEnd() {
+                this.isInteracting = false;
+                this.face.classList.remove('touched');
+                setTimeout(() => {
+                    if (!this.isInteracting) {
+                        this.setExpression('idle');
+                    }
+                }, 500);
+            }
+            
+            followPointer(pointer) {
+                if (!pointer) return;
+                
+                const rect = this.face.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const deltaX = (pointer.clientX - centerX) / 10;
+                const deltaY = (pointer.clientY - centerY) / 10;
+                
+                const maxOffset = 15;
+                const clampedX = Math.max(-maxOffset, Math.min(maxOffset, deltaX));
+                const clampedY = Math.max(-maxOffset, Math.min(maxOffset, deltaY));
+                
+                this.leftPupil.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+                this.rightPupil.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+            }
+            
+            blink() {
+                this.face.classList.add('blink');
+                setTimeout(() => {
+                    this.face.classList.remove('blink');
+                }, 150);
+            }
+            
+            setExpression(name) {
+                // Remove all expression classes
+                const allExpressions = ['blink', 'sleepy', 'happy', 'surprised', 'sad', 'angry', 'love', 'nervous', 'excited', 'thinking', 'dizzy', 'touched'];
+                allExpressions.forEach(exp => this.face.classList.remove(exp));
+                
+                // Reset pupils
+                if (!this.isInteracting) {
+                    this.leftPupil.style.transform = 'translate(-50%, -50%)';
+                    this.rightPupil.style.transform = 'translate(-50%, -50%)';
+                }
+                
+                // Reset love heart
+                this.leftPupil.innerHTML = '';
+                this.rightPupil.innerHTML = '';
+                
+                this.currentExpression = name;
+                
+                switch(name) {
+                    case 'idle':
+                        this.label.textContent = '😐 idle';
+                        break;
+                        
+                    case 'lookLeft':
+                        this.leftPupil.style.transform = 'translate(-80%, -50%)';
+                        this.rightPupil.style.transform = 'translate(-80%, -50%)';
+                        this.label.textContent = '👀 looking left';
+                        break;
+                        
+                    case 'lookRight':
+                        this.leftPupil.style.transform = 'translate(-20%, -50%)';
+                        this.rightPupil.style.transform = 'translate(-20%, -50%)';
+                        this.label.textContent = '👀 looking right';
+                        break;
+                        
+                    case 'lookUp':
+                        this.leftPupil.style.transform = 'translate(-50%, -80%)';
+                        this.rightPupil.style.transform = 'translate(-50%, -80%)';
+                        this.label.textContent = '👀 looking up';
+                        break;
+                        
+                    case 'lookDown':
+                        this.leftPupil.style.transform = 'translate(-50%, -20%)';
+                        this.rightPupil.style.transform = 'translate(-50%, -20%)';
+                        this.label.textContent = '👀 looking down';
+                        break;
+                        
+                    case 'blink':
+                    case 'doubleBlink':
+                        this.blink();
+                        if (name === 'doubleBlink') {
+                            setTimeout(() => this.blink(), 300);
+                        }
+                        this.label.textContent = '😑 blink';
+                        break;
+                        
+                    case 'sleepy':
+                        this.face.classList.add('sleepy');
+                        this.label.textContent = '😪 sleepy';
+                        break;
+                        
+                    case 'happy':
+                        this.face.classList.add('happy');
+                        this.label.textContent = '😊 happy';
+                        break;
+                        
+                    case 'surprised':
+                        this.face.classList.add('surprised');
+                        this.label.textContent = '😲 surprised';
+                        break;
+                        
+                    case 'sad':
+                        this.face.classList.add('sad');
+                        this.label.textContent = '😢 sad';
+                        break;
+                        
+                    case 'thinking':
+                        this.face.classList.add('thinking');
+                        this.label.textContent = '🤔 thinking';
+                        break;
+                        
+                    case 'excited':
+                        this.face.classList.add('excited');
+                        this.label.textContent = '🤩 excited';
+                        break;
+                        
+                    case 'nervous':
+                        this.face.classList.add('nervous');
+                        this.label.textContent = '😰 nervous';
+                        break;
+                        
+                    case 'dizzy':
+                        this.face.classList.add('dizzy');
+                        this.label.textContent = '😵 dizzy';
+                        break;
+                        
+                    case 'love':
+                        this.face.classList.add('love');
+                        this.leftPupil.innerHTML = '❤️';
+                        this.rightPupil.innerHTML = '❤️';
+                        this.label.textContent = '😍 love';
+                        break;
+                        
+                    case 'curious':
+                        this.leftPupil.style.transform = 'translate(-30%, -60%)';
+                        this.rightPupil.style.transform = 'translate(-30%, -60%)';
+                        this.face.style.transform = 'rotate(10deg)';
+                        setTimeout(() => {
+                            this.face.style.transform = 'rotate(0deg)';
+                        }, 1000);
+                        this.label.textContent = '🧐 curious';
+                        break;
+                }
+            }
+            
+            getRandomExpression() {
+                // Weighted random selection
+                const totalWeight = this.expressions.reduce((sum, exp) => sum + exp.weight, 0);
+                let random = Math.random() * totalWeight;
+                
+                for (const exp of this.expressions) {
+                    random -= exp.weight;
+                    if (random <= 0) {
+                        return exp;
+                    }
+                }
+                return this.expressions[0];
+            }
+            
+            nextExpression() {
+                if (this.isInteracting) {
+                    setTimeout(() => this.nextExpression(), 1000);
+                    return;
+                }
+                
+                // Check if idle too long
+                const idleTime = Date.now() - this.lastInteraction;
+                
+                let expression;
+                
+                if (idleTime > 30000 && Math.random() < 0.4) {
+                    // More likely to be sleepy after 30 seconds of no interaction
+                    expression = { name: 'sleepy', duration: 5000 };
+                } else if (idleTime > 60000 && Math.random() < 0.6) {
+                    // Very sleepy after 1 minute
+                    expression = { name: 'sleepy', duration: 8000 };
+                } else {
+                    expression = this.getRandomExpression();
+                }
+                
+                this.setExpression(expression.name);
+                
+                // Schedule next expression
+                const nextDelay = expression.duration + Math.random() * 1500;
+                setTimeout(() => this.nextExpression(), nextDelay);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            new RobotFace();
+        });
+        
+        // Prevent zoom on double tap
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+    </script>
+</body>
+</html>
