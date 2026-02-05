@@ -124,6 +124,167 @@
             opacity: 0.4;
         }
 
+        /* Energy Bar Container */
+        .energy-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .energy-bar-wrapper {
+            width: 200px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            border: 2px solid #333;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .energy-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00e5ff 50%, #00ff88 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        .energy-bar.low {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ff8800 50%, #ff6b6b 100%);
+            box-shadow: 0 0 15px rgba(255, 100, 100, 0.5);
+        }
+
+        .energy-bar.critical {
+            background: linear-gradient(90deg, #ff3333 0%, #cc0000 50%, #ff3333 100%);
+            box-shadow: 0 0 15px rgba(255, 50, 50, 0.5);
+            animation: pulse-critical 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-critical {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .energy-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        .charge-button {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .charge-button:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: scale(1.05);
+        }
+
+        .charge-button:active {
+            transform: scale(0.95);
+            background: rgba(0, 255, 136, 0.3);
+        }
+
+        .charge-button.charging {
+            animation: charge-pulse 0.3s ease;
+            border-color: #ffff00;
+            color: #ffff00;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.5);
+        }
+
+        @keyframes charge-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .charge-button.full {
+            border-color: #666;
+            color: #666;
+            cursor: not-allowed;
+            background: rgba(100, 100, 100, 0.1);
+        }
+
+        /* Lightning effect */
+        .lightning {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 0, 0.8) 0%, transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .lightning.flash {
+            animation: lightning-flash 0.2s ease-out;
+        }
+
+        @keyframes lightning-flash {
+            0% { opacity: 1; transform: scale(0.5); }
+            100% { opacity: 0; transform: scale(2); }
+        }
+
+        /* Charging expression */
+        .robot-head.charging .eye {
+            background: linear-gradient(180deg, #ffff00 0%, #ffcc00 50%, #ff9900 100%);
+            box-shadow: 
+                0 0 40px rgba(255, 255, 0, 0.8),
+                0 0 80px rgba(255, 200, 0, 0.4);
+            animation: charge-eyes 0.3s ease-in-out infinite;
+        }
+
+        @keyframes charge-eyes {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.1); }
+        }
+
+        .robot-head.charging .visor {
+            box-shadow: 
+                inset 0 4px 20px rgba(0, 0, 0, 0.8),
+                0 0 60px rgba(255, 255, 0, 0.4),
+                0 0 4px rgba(255, 200, 0, 0.6);
+        }
+
+        /* Low energy expression */
+        .robot-head.low-energy .eye {
+            height: 40px !important;
+            opacity: 0.6;
+            background: linear-gradient(180deg, #6699bb 0%, #5588aa 50%, #446688 100%);
+        }
+
+        .robot-head.depleted .eye {
+            height: 8px !important;
+            opacity: 0.3;
+            background: linear-gradient(180deg, #444 0%, #333 100%);
+            box-shadow: none;
+        }
+
+        .robot-head.depleted .visor {
+            box-shadow: 
+                inset 0 4px 20px rgba(0, 0, 0, 0.9),
+                0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
         /* Expression states */
         
         .robot-head.idle .eye {
@@ -398,6 +559,7 @@
             font-size: 11px;
             letter-spacing: 2px;
             animation: fadeHint 3s ease-in-out infinite;
+            display: none;
         }
 
         @keyframes fadeHint {
@@ -439,6 +601,28 @@
             opacity: 1;
             transform: translateX(-50%) translateY(-5px);
         }
+
+        /* Charging sparks */
+        .spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffff00;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: spark-fly 0.5s ease-out forwards;
+        }
+
+        @keyframes spark-fly {
+            0% { 
+                opacity: 1; 
+                transform: translate(0, 0) scale(1);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -458,7 +642,18 @@
             </div>
         </div>
         
-        <div class="tap-hint">👆 点击屏幕互动</div>
+        <!-- Energy System -->
+        <div class="energy-container">
+            <div class="energy-bar-wrapper">
+                <div class="energy-bar" id="energyBar" style="width: 100%"></div>
+            </div>
+            <span class="energy-label" id="energyLabel">⚡ 100%</span>
+            <button class="charge-button" id="chargeButton" title="充电">
+                <div class="lightning" id="lightning"></div>
+                ⚡
+            </button>
+        </div>
+        
         <div class="expression-label" id="label">idle</div>
     </div>
 
@@ -525,6 +720,16 @@
                     confused: [
                         { file: 'what.mp3', text: '什么？' },
                     ],
+                    charging: [
+                        { file: 'happy.mp3', text: '充电中~' },
+                        { file: 'wow.mp3', text: '来电了！' },
+                    ],
+                    lowEnergy: [
+                        { file: 'sleepy.mp3', text: '没电了...' },
+                    ],
+                    fullEnergy: [
+                        { file: 'happy.mp3', text: '充满啦！' },
+                    ],
                 };
                 
                 // Preload audio files
@@ -586,6 +791,151 @@
             }
         }
 
+        // Energy Manager
+        class EnergyManager {
+            constructor(robot) {
+                this.robot = robot;
+                this.energy = 100;
+                this.maxEnergy = 100;
+                this.chargeAmount = 8; // Amount per click
+                this.drainRate = 0.5; // Energy drain per second
+                this.isCharging = false;
+                
+                this.energyBar = document.getElementById('energyBar');
+                this.energyLabel = document.getElementById('energyLabel');
+                this.chargeButton = document.getElementById('chargeButton');
+                this.lightning = document.getElementById('lightning');
+                
+                this.init();
+            }
+            
+            init() {
+                // Start energy drain
+                setInterval(() => this.drain(), 1000);
+                
+                // Charge button
+                this.chargeButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.charge();
+                });
+                
+                this.chargeButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.charge();
+                }, { passive: false });
+                
+                this.updateUI();
+            }
+            
+            drain() {
+                if (this.energy > 0 && !this.isCharging) {
+                    this.energy = Math.max(0, this.energy - this.drainRate);
+                    this.updateUI();
+                    this.checkEnergyState();
+                }
+            }
+            
+            charge() {
+                if (this.energy >= this.maxEnergy) return;
+                
+                // Vibrate
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                // Add energy
+                const previousEnergy = this.energy;
+                this.energy = Math.min(this.maxEnergy, this.energy + this.chargeAmount);
+                
+                // Visual feedback
+                this.isCharging = true;
+                this.chargeButton.classList.add('charging');
+                this.lightning.classList.add('flash');
+                this.robot.head.classList.add('charging');
+                
+                // Create sparks
+                this.createSparks();
+                
+                // Play sound on first charge or when full
+                if (previousEnergy < 20 && this.energy >= 20) {
+                    const text = this.robot.voice.play('charging');
+                    this.robot.showSpeech(text);
+                } else if (this.energy >= this.maxEnergy) {
+                    const text = this.robot.voice.play('fullEnergy');
+                    this.robot.showSpeech(text);
+                }
+                
+                setTimeout(() => {
+                    this.chargeButton.classList.remove('charging');
+                    this.lightning.classList.remove('flash');
+                    this.robot.head.classList.remove('charging');
+                    this.isCharging = false;
+                }, 300);
+                
+                this.updateUI();
+                this.checkEnergyState();
+            }
+            
+            createSparks() {
+                const button = this.chargeButton;
+                const rect = button.getBoundingClientRect();
+                
+                for (let i = 0; i < 8; i++) {
+                    const spark = document.createElement('div');
+                    spark.className = 'spark';
+                    spark.style.left = rect.left + rect.width / 2 + 'px';
+                    spark.style.top = rect.top + rect.height / 2 + 'px';
+                    spark.style.setProperty('--tx', (Math.random() - 0.5) * 100 + 'px');
+                    spark.style.setProperty('--ty', (Math.random() - 0.5) * 100 + 'px');
+                    document.body.appendChild(spark);
+                    
+                    setTimeout(() => spark.remove(), 500);
+                }
+            }
+            
+            checkEnergyState() {
+                // Remove all energy states
+                this.robot.head.classList.remove('low-energy', 'depleted');
+                
+                if (this.energy <= 0) {
+                    this.robot.head.classList.add('depleted');
+                    // Only show message once
+                    if (!this.robot.depletedMessageShown) {
+                        const text = this.robot.voice.play('lowEnergy');
+                        this.robot.showSpeech(text);
+                        this.robot.depletedMessageShown = true;
+                    }
+                } else if (this.energy <= 20) {
+                    this.robot.head.classList.add('low-energy');
+                    this.robot.depletedMessageShown = false;
+                } else {
+                    this.robot.depletedMessageShown = false;
+                }
+            }
+            
+            updateUI() {
+                const percent = (this.energy / this.maxEnergy) * 100;
+                this.energyBar.style.width = percent + '%';
+                this.energyLabel.textContent = `⚡ ${Math.round(this.energy)}%`;
+                
+                // Bar color states
+                this.energyBar.classList.remove('low', 'critical');
+                if (this.energy <= 10) {
+                    this.energyBar.classList.add('critical');
+                } else if (this.energy <= 30) {
+                    this.energyBar.classList.add('low');
+                }
+                
+                // Button state
+                if (this.energy >= this.maxEnergy) {
+                    this.chargeButton.classList.add('full');
+                } else {
+                    this.chargeButton.classList.remove('full');
+                }
+            }
+        }
+
         class MORobot {
             constructor() {
                 this.head = document.getElementById('robotHead');
@@ -605,8 +955,10 @@
                 this.pokeCount = 0;
                 this.lastPokeTime = 0;
                 this.speechTimeout = null;
+                this.depletedMessageShown = false;
                 
                 this.voice = new VoiceManager();
+                this.energy = new EnergyManager(this);
                 
                 this.expressions = [
                     { name: 'idle', duration: 5000, weight: 5 },
@@ -659,14 +1011,14 @@
                     this.soundToggle.classList.toggle('muted', !enabled);
                 });
 
-                // Touch/click
-                this.container.addEventListener('touchstart', (e) => this.onTouch(e), { passive: true });
-                this.container.addEventListener('mousedown', (e) => this.onTouch(e));
-                this.container.addEventListener('touchend', () => this.onTouchEnd());
-                this.container.addEventListener('mouseup', () => this.onTouchEnd());
-                this.container.addEventListener('mouseleave', () => this.onTouchEnd());
+                // Touch/click on visor area only
+                const visor = this.head.querySelector('.visor');
+                visor.addEventListener('touchstart', (e) => this.onTouch(e), { passive: true });
+                visor.addEventListener('mousedown', (e) => this.onTouch(e));
+                visor.addEventListener('touchend', () => this.onTouchEnd());
+                visor.addEventListener('mouseup', () => this.onTouchEnd());
                 
-                // Eye tracking
+                // Eye tracking on container
                 this.container.addEventListener('touchmove', (e) => this.trackPointer(e.touches[0]), { passive: true });
                 this.container.addEventListener('mousemove', (e) => this.trackPointer(e));
                 
@@ -675,7 +1027,8 @@
                 
                 // Random blinks
                 setInterval(() => {
-                    if (!this.isInteracting && this.currentExpression === 'idle' && Math.random() < 0.3) {
+                    if (!this.isInteracting && this.currentExpression === 'idle' && 
+                        Math.random() < 0.3 && this.energy.energy > 0) {
                         this.blink();
                     }
                 }, 5000);
@@ -698,6 +1051,7 @@
             
             trackPointer(pointer) {
                 if (!pointer) return;
+                if (this.energy.energy <= 0) return; // No tracking when depleted
                 if (['sleepy', 'blink', 'dizzy', 'thinking', 'curious'].includes(this.currentExpression)) {
                     return;
                 }
@@ -748,6 +1102,12 @@
             
             onTouch(e) {
                 if (e.target === this.soundToggle) return;
+                if (this.energy.energy <= 0) {
+                    // When depleted, just show message
+                    const text = this.voice.play('lowEnergy');
+                    this.showSpeech(text);
+                    return;
+                }
                 
                 this.isInteracting = true;
                 this.lastInteraction = Date.now();
@@ -820,6 +1180,9 @@
             }
             
             setExpression(name, playVoice = true) {
+                // Don't change expression if depleted (except to idle)
+                if (this.energy.energy <= 0 && name !== 'idle') return;
+                
                 const isNewExpression = name !== this.currentExpression;
                 
                 const allExpressions = Object.keys(this.expressionLabels);
@@ -855,7 +1218,7 @@
             }
             
             scheduleNextExpression() {
-                if (this.isInteracting) {
+                if (this.isInteracting || this.energy.energy <= 0) {
                     this.expressionTimeout = setTimeout(() => this.scheduleNextExpression(), 2000);
                     return;
                 }
@@ -863,7 +1226,10 @@
                 const idleTime = Date.now() - this.lastInteraction;
                 let expression;
                 
-                if (idleTime > 60000 && Math.random() < 0.6) {
+                // Check energy level for expression selection
+                if (this.energy.energy <= 20) {
+                    expression = { name: 'sleepy', duration: 6000 };
+                } else if (idleTime > 60000 && Math.random() < 0.6) {
                     expression = { name: 'sleepy', duration: 8000 };
                 } else if (idleTime > 30000 && Math.random() < 0.4) {
                     expression = { name: 'unimpressed', duration: 5000 };
