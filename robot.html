@@ -99,16 +99,40 @@
             border-radius: 3px;
         }
 
+        /* Sound toggle button */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 100;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sound-toggle.muted {
+            opacity: 0.4;
+        }
+
         /* Expression states */
         
-        /* Idle */
         .robot-head.idle .eye {
             width: 65px;
             height: 85px;
             border-radius: 8px;
         }
 
-        /* Surprised - squares, bigger */
         .robot-head.surprised .eye {
             width: 95px;
             height: 95px;
@@ -118,14 +142,12 @@
                 0 0 100px rgba(0, 229, 255, 0.5);
         }
 
-        /* Unimpressed - horizontal lines */
         .robot-head.unimpressed .eye {
             width: 65px;
             height: 12px;
             border-radius: 3px;
         }
 
-        /* Angry */
         .robot-head.angry .eye {
             width: 65px;
             height: 35px;
@@ -144,7 +166,6 @@
             transform: rotate(-12deg) translateY(-3px);
         }
 
-        /* Happy */
         .robot-head.happy .eye {
             width: 70px;
             height: 45px;
@@ -154,7 +175,6 @@
                 0 0 80px rgba(0, 229, 255, 0.4);
         }
 
-        /* Sad */
         .robot-head.sad .eye {
             width: 60px;
             height: 45px;
@@ -172,7 +192,6 @@
             transform: rotate(6deg);
         }
 
-        /* Sleepy */
         .robot-head.sleepy .eye {
             width: 65px;
             height: 6px;
@@ -180,7 +199,6 @@
             opacity: 0.6;
         }
 
-        /* Love */
         .robot-head.love .eye {
             width: 65px;
             height: 65px;
@@ -191,7 +209,6 @@
                 0 0 80px rgba(255, 105, 180, 0.4);
         }
 
-        /* Thinking */
         .robot-head.thinking .eye:first-child {
             width: 55px;
             height: 65px;
@@ -206,7 +223,6 @@
             transform: translate(-5px, -10px);
         }
 
-        /* Confused */
         .robot-head.confused .eye:first-child {
             width: 45px;
             height: 60px;
@@ -219,7 +235,6 @@
             transform: rotate(8deg);
         }
 
-        /* Excited */
         .robot-head.excited .eye {
             width: 55px;
             height: 95px;
@@ -235,7 +250,6 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* Blink */
         .robot-head.blink .eye {
             height: 4px !important;
             width: 65px !important;
@@ -243,7 +257,6 @@
             transition: all 0.08s ease;
         }
 
-        /* Dizzy */
         .robot-head.dizzy .eye {
             width: 65px;
             height: 65px;
@@ -257,7 +270,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Skeptical */
         .robot-head.skeptical .eye:first-child {
             width: 65px;
             height: 85px;
@@ -268,7 +280,6 @@
             height: 20px;
         }
 
-        /* Wink */
         .robot-head.wink .eye:first-child {
             width: 65px;
             height: 85px;
@@ -279,7 +290,6 @@
             height: 6px;
         }
 
-        /* Nervous */
         .robot-head.nervous .eye {
             animation: shake 0.4s ease-in-out infinite;
             background: linear-gradient(180deg, #88ddff 0%, #66bbdd 50%, #4499bb 100%);
@@ -305,7 +315,6 @@
             100% { transform: translateY(25px); opacity: 0; }
         }
 
-        /* Curious - tilted */
         .robot-head.curious .eyes-wrapper {
             transform: rotate(15deg);
         }
@@ -315,7 +324,6 @@
             height: 90px;
         }
 
-        /* ZZZ for sleepy */
         .zzz {
             position: absolute;
             top: -30px;
@@ -335,7 +343,6 @@
             50% { transform: translateY(-12px) rotate(5deg); }
         }
 
-        /* Expression label */
         .expression-label {
             position: fixed;
             bottom: 30px;
@@ -348,7 +355,6 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Touch effect */
         .robot-head.touched .visor {
             box-shadow: 
                 inset 0 4px 20px rgba(0, 0, 0, 0.8),
@@ -356,7 +362,6 @@
                 0 0 4px rgba(0, 229, 255, 0.6);
         }
 
-        /* Antenna */
         .antenna {
             width: 4px;
             height: 40px;
@@ -384,10 +389,29 @@
             0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
             50% { opacity: 0.6; transform: translateX(-50%) scale(1.15); }
         }
+
+        /* Tap hint */
+        .tap-hint {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 11px;
+            letter-spacing: 2px;
+            animation: fadeHint 3s ease-in-out infinite;
+        }
+
+        @keyframes fadeHint {
+            0%, 100% { opacity: 0.15; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
     <div class="container" id="container">
+        <button class="sound-toggle" id="soundToggle" title="音效开关">🔊</button>
+        
         <div class="robot-head idle" id="robotHead">
             <div class="antenna"></div>
             <div class="zzz">💤</div>
@@ -400,10 +424,223 @@
             </div>
         </div>
         
+        <div class="tap-hint">👆 点击屏幕互动</div>
         <div class="expression-label" id="label">idle</div>
     </div>
 
     <script>
+        // Cute Sound Generator
+        class CuteSound {
+            constructor() {
+                this.audioContext = null;
+                this.enabled = true;
+                this.initialized = false;
+            }
+
+            init() {
+                if (this.initialized) return;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.initialized = true;
+                } catch (e) {
+                    console.log('Web Audio not supported');
+                }
+            }
+
+            resume() {
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+
+            // Generate a cute boop/beep sound
+            boop(freq = 800, duration = 0.1, type = 'sine') {
+                if (!this.enabled || !this.audioContext) return;
+                this.resume();
+
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                
+                gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + duration);
+            }
+
+            // Slide between frequencies
+            slide(startFreq, endFreq, duration = 0.2, type = 'sine') {
+                if (!this.enabled || !this.audioContext) return;
+                this.resume();
+
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(startFreq, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, this.audioContext.currentTime + duration);
+                
+                gain.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + duration);
+            }
+
+            // Multi-note melody
+            melody(notes, noteDuration = 0.1) {
+                if (!this.enabled || !this.audioContext) return;
+                this.resume();
+
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        if (freq > 0) this.boop(freq, noteDuration);
+                    }, i * noteDuration * 1000);
+                });
+            }
+
+            // Wobble effect
+            wobble(baseFreq = 600, duration = 0.3) {
+                if (!this.enabled || !this.audioContext) return;
+                this.resume();
+
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                const lfo = this.audioContext.createOscillator();
+                const lfoGain = this.audioContext.createGain();
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
+                
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(20, this.audioContext.currentTime);
+                lfoGain.gain.setValueAtTime(50, this.audioContext.currentTime);
+                
+                gain.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                osc.start();
+                lfo.start();
+                osc.stop(this.audioContext.currentTime + duration);
+                lfo.stop(this.audioContext.currentTime + duration);
+            }
+
+            // Expression-specific sounds
+            play(type) {
+                if (!this.enabled) return;
+                this.init();
+
+                switch(type) {
+                    case 'click':
+                        // Random cute click sounds
+                        const clicks = [
+                            () => this.boop(900, 0.08),
+                            () => this.boop(1100, 0.06),
+                            () => this.melody([800, 1000], 0.05),
+                            () => this.slide(700, 900, 0.1),
+                        ];
+                        clicks[Math.floor(Math.random() * clicks.length)]();
+                        break;
+
+                    case 'happy':
+                        this.melody([523, 659, 784, 1047], 0.08); // C E G C ascending
+                        break;
+
+                    case 'surprised':
+                        this.slide(400, 1200, 0.15); // Quick slide up
+                        break;
+
+                    case 'sad':
+                        this.slide(600, 300, 0.3); // Slow slide down
+                        break;
+
+                    case 'sleepy':
+                        this.slide(400, 200, 0.5); // Very slow descend
+                        break;
+
+                    case 'love':
+                        this.melody([523, 659, 523, 784], 0.12); // Cute pattern
+                        setTimeout(() => this.wobble(800, 0.2), 400);
+                        break;
+
+                    case 'excited':
+                        this.melody([600, 800, 600, 800, 1000], 0.06);
+                        break;
+
+                    case 'angry':
+                        this.boop(150, 0.2, 'sawtooth');
+                        setTimeout(() => this.boop(120, 0.15, 'sawtooth'), 150);
+                        break;
+
+                    case 'confused':
+                        this.slide(600, 800, 0.15);
+                        setTimeout(() => this.slide(800, 500, 0.2), 180);
+                        break;
+
+                    case 'thinking':
+                        this.melody([400, 500, 450, 550], 0.15);
+                        break;
+
+                    case 'unimpressed':
+                        this.boop(300, 0.15);
+                        break;
+
+                    case 'nervous':
+                        this.melody([600, 650, 600, 650, 700], 0.05);
+                        break;
+
+                    case 'skeptical':
+                        this.slide(500, 700, 0.2);
+                        break;
+
+                    case 'wink':
+                        this.melody([800, 1000], 0.08);
+                        break;
+
+                    case 'curious':
+                        this.slide(500, 900, 0.2);
+                        break;
+
+                    case 'dizzy':
+                        this.wobble(500, 0.4);
+                        break;
+
+                    case 'blink':
+                        this.boop(600, 0.04);
+                        break;
+
+                    case 'poke':
+                        // When repeatedly poked
+                        const pokes = [
+                            () => this.melody([800, 600], 0.06),
+                            () => this.boop(500, 0.1),
+                            () => this.slide(900, 600, 0.12),
+                        ];
+                        pokes[Math.floor(Math.random() * pokes.length)]();
+                        break;
+                }
+            }
+        }
+
         class MORobot {
             constructor() {
                 this.head = document.getElementById('robotHead');
@@ -412,12 +649,17 @@
                 this.rightEye = document.getElementById('rightEye');
                 this.label = document.getElementById('label');
                 this.container = document.getElementById('container');
+                this.soundToggle = document.getElementById('soundToggle');
                 
                 this.currentExpression = 'idle';
                 this.isInteracting = false;
                 this.lastInteraction = Date.now();
                 this.expressionTimeout = null;
                 this.isTracking = false;
+                this.pokeCount = 0;
+                this.lastPokeTime = 0;
+                
+                this.sound = new CuteSound();
                 
                 this.expressions = [
                     { name: 'idle', duration: 5000, weight: 5 },
@@ -462,6 +704,18 @@
             }
             
             init() {
+                // Sound toggle
+                this.soundToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const enabled = this.sound.toggle();
+                    this.soundToggle.textContent = enabled ? '🔊' : '🔇';
+                    this.soundToggle.classList.toggle('muted', !enabled);
+                    if (enabled) {
+                        this.sound.init();
+                        this.sound.play('click');
+                    }
+                });
+
                 // Touch/click
                 this.container.addEventListener('touchstart', (e) => this.onTouch(e), { passive: true });
                 this.container.addEventListener('mousedown', (e) => this.onTouch(e));
@@ -473,10 +727,14 @@
                 this.container.addEventListener('touchmove', (e) => this.trackPointer(e.touches[0]), { passive: true });
                 this.container.addEventListener('mousemove', (e) => this.trackPointer(e));
                 
+                // Initialize sound on first interaction
+                this.container.addEventListener('touchstart', () => this.sound.init(), { once: true });
+                this.container.addEventListener('mousedown', () => this.sound.init(), { once: true });
+                
                 // Start expression cycle
                 this.scheduleNextExpression();
                 
-                // Random blinks (slower)
+                // Random blinks
                 setInterval(() => {
                     if (!this.isInteracting && this.currentExpression === 'idle' && Math.random() < 0.3) {
                         this.blink();
@@ -486,8 +744,6 @@
             
             trackPointer(pointer) {
                 if (!pointer) return;
-                
-                // Don't track during certain expressions
                 if (['sleepy', 'blink', 'dizzy', 'thinking', 'curious'].includes(this.currentExpression)) {
                     return;
                 }
@@ -499,22 +755,17 @@
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 
-                // Calculate offset
                 const deltaX = (pointer.clientX - centerX);
                 const deltaY = (pointer.clientY - centerY);
                 
-                // Limit movement
                 const maxMove = 35;
                 const moveX = Math.max(-maxMove, Math.min(maxMove, deltaX / 5));
                 const moveY = Math.max(-maxMove, Math.min(maxMove, deltaY / 5));
                 
-                // Calculate compression based on distance from center
                 const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                 const maxDist = Math.sqrt(rect.width * rect.width + rect.height * rect.height) / 2;
                 const compression = Math.min(0.3, (distance / maxDist) * 0.3);
                 
-                // Horizontal look = compress width, stretch height
-                // Vertical look = compress height, stretch width
                 const absX = Math.abs(deltaX);
                 const absY = Math.abs(deltaY);
                 
@@ -522,16 +773,13 @@
                 let scaleY = 1;
                 
                 if (absX > absY) {
-                    // Looking left/right
                     scaleX = 1 - compression * 0.5;
                     scaleY = 1 + compression * 0.3;
                 } else {
-                    // Looking up/down
                     scaleX = 1 + compression * 0.3;
                     scaleY = 1 - compression * 0.5;
                 }
                 
-                // Apply transform
                 this.eyesWrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
                 this.leftEye.style.transform = `scale(${scaleX}, ${scaleY})`;
                 this.rightEye.style.transform = `scale(${scaleX}, ${scaleY})`;
@@ -545,25 +793,47 @@
             }
             
             onTouch(e) {
+                // Don't process if clicking sound toggle
+                if (e.target === this.soundToggle) return;
+                
                 this.isInteracting = true;
                 this.lastInteraction = Date.now();
                 this.head.classList.add('touched');
+                
+                // Track pokes
+                const now = Date.now();
+                if (now - this.lastPokeTime < 1500) {
+                    this.pokeCount++;
+                } else {
+                    this.pokeCount = 1;
+                }
+                this.lastPokeTime = now;
                 
                 if (this.expressionTimeout) {
                     clearTimeout(this.expressionTimeout);
                 }
                 
-                // Random reaction
-                const reactions = ['surprised', 'happy', 'excited', 'love', 'curious'];
-                const reaction = reactions[Math.floor(Math.random() * reactions.length)];
-                this.setExpression(reaction);
+                // React based on poke count
+                let reaction;
+                if (this.pokeCount >= 5) {
+                    reaction = 'angry';
+                    this.sound.play('angry');
+                } else if (this.pokeCount >= 3) {
+                    reaction = 'nervous';
+                    this.sound.play('poke');
+                } else {
+                    const reactions = ['surprised', 'happy', 'excited', 'love', 'curious', 'wink'];
+                    reaction = reactions[Math.floor(Math.random() * reactions.length)];
+                    this.sound.play('click');
+                }
+                
+                this.setExpression(reaction, true);
             }
             
             onTouchEnd() {
                 this.isInteracting = false;
                 this.head.classList.remove('touched');
                 
-                // Reset eye position after a delay
                 setTimeout(() => {
                     if (!this.isTracking) {
                         this.resetEyePosition();
@@ -573,21 +843,25 @@
                 setTimeout(() => {
                     if (!this.isInteracting) {
                         this.resetEyePosition();
-                        this.setExpression('idle');
+                        this.setExpression('idle', false);
                         this.scheduleNextExpression();
                     }
                 }, 1200);
             }
             
             blink() {
+                const prevExpression = this.currentExpression;
                 this.head.classList.add('blink');
+                this.sound.play('blink');
                 setTimeout(() => {
                     this.head.classList.remove('blink');
                 }, 120);
             }
             
-            setExpression(name) {
-                // Remove all expression classes
+            setExpression(name, playSound = true) {
+                // Don't replay same expression sound
+                const isNewExpression = name !== this.currentExpression;
+                
                 const allExpressions = Object.keys(this.expressionLabels);
                 allExpressions.forEach(exp => this.head.classList.remove(exp));
                 
@@ -595,10 +869,14 @@
                 this.currentExpression = name;
                 this.label.textContent = this.expressionLabels[name] || name;
                 
-                // Reset transforms for expressions that control their own
                 if (['thinking', 'curious', 'confused'].includes(name)) {
                     this.leftEye.style.transform = '';
                     this.rightEye.style.transform = '';
+                }
+                
+                // Play sound for expression change
+                if (playSound && isNewExpression && name !== 'idle' && name !== 'blink') {
+                    this.sound.play(name);
                 }
             }
             
@@ -622,7 +900,6 @@
                 const idleTime = Date.now() - this.lastInteraction;
                 let expression;
                 
-                // Get sleepier over time
                 if (idleTime > 60000 && Math.random() < 0.6) {
                     expression = { name: 'sleepy', duration: 8000 };
                 } else if (idleTime > 30000 && Math.random() < 0.4) {
@@ -631,11 +908,10 @@
                     expression = this.getWeightedRandom();
                 }
                 
-                this.setExpression(expression.name);
+                this.setExpression(expression.name, true);
                 
-                // Slower expression changes - add more delay
                 const baseDelay = expression.duration;
-                const randomDelay = Math.random() * 3000 + 2000; // 2-5 seconds extra
+                const randomDelay = Math.random() * 3000 + 2000;
                 
                 this.expressionTimeout = setTimeout(() => this.scheduleNextExpression(), baseDelay + randomDelay);
             }
