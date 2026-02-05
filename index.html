@@ -78,7 +78,6 @@
             text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         }
 
-        /* Progress bar styles */
         .time-container {
             flex: 1;
             max-width: 180px;
@@ -282,10 +281,15 @@
             color: #fff;
         }
 
-        .sound-toggle {
+        .controls {
             position: absolute;
             top: 16px;
             right: 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -297,11 +301,11 @@
             transition: all 0.2s ease;
         }
 
-        .sound-toggle:hover {
+        .control-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
 
-        .sound-toggle.muted {
+        .control-btn.muted {
             opacity: 0.5;
         }
 
@@ -408,7 +412,10 @@
 </head>
 <body>
     <div class="game-wrapper">
-        <button class="sound-toggle" id="soundToggle" title="音效开关">🔊</button>
+        <div class="controls">
+            <button class="control-btn" id="musicToggle" title="背景音乐">🎵</button>
+            <button class="control-btn" id="soundToggle" title="音效开关">🔊</button>
+        </div>
         
         <div class="game-container">
             <div class="header">
@@ -489,6 +496,150 @@
     </div>
 
     <script>
+        // 8-bit Background Music Generator
+        class MusicPlayer {
+            constructor() {
+                this.audioContext = null;
+                this.isPlaying = false;
+                this.enabled = true;
+                this.nodes = [];
+                this.intervalId = null;
+                
+                // Simple 8-bit melody (note frequencies)
+                this.melody = [
+                    { note: 392, duration: 0.15 },  // G4
+                    { note: 440, duration: 0.15 },  // A4
+                    { note: 494, duration: 0.15 },  // B4
+                    { note: 523, duration: 0.3 },   // C5
+                    { note: 494, duration: 0.15 },  // B4
+                    { note: 440, duration: 0.15 },  // A4
+                    { note: 392, duration: 0.3 },   // G4
+                    { note: 0, duration: 0.15 },    // rest
+                    { note: 330, duration: 0.15 },  // E4
+                    { note: 392, duration: 0.15 },  // G4
+                    { note: 440, duration: 0.3 },   // A4
+                    { note: 392, duration: 0.15 },  // G4
+                    { note: 330, duration: 0.15 },  // E4
+                    { note: 294, duration: 0.3 },   // D4
+                    { note: 0, duration: 0.15 },    // rest
+                    { note: 294, duration: 0.15 },  // D4
+                    { note: 330, duration: 0.15 },  // E4
+                    { note: 392, duration: 0.15 },  // G4
+                    { note: 440, duration: 0.3 },   // A4
+                    { note: 523, duration: 0.15 },  // C5
+                    { note: 494, duration: 0.15 },  // B4
+                    { note: 440, duration: 0.15 },  // A4
+                    { note: 392, duration: 0.45 },  // G4
+                    { note: 0, duration: 0.15 },    // rest
+                ];
+                
+                this.bassLine = [
+                    { note: 196, duration: 0.3 },   // G3
+                    { note: 196, duration: 0.3 },   // G3
+                    { note: 220, duration: 0.3 },   // A3
+                    { note: 220, duration: 0.3 },   // A3
+                    { note: 165, duration: 0.3 },   // E3
+                    { note: 165, duration: 0.3 },   // E3
+                    { note: 147, duration: 0.3 },   // D3
+                    { note: 147, duration: 0.3 },   // D3
+                ];
+                
+                this.melodyIndex = 0;
+                this.bassIndex = 0;
+                this.lastMelodyTime = 0;
+                this.lastBassTime = 0;
+            }
+
+            init() {
+                if (this.audioContext) return;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                if (!this.enabled) {
+                    this.stop();
+                }
+                return this.enabled;
+            }
+
+            playNote(freq, duration, type = 'square', volume = 0.1, detune = 0) {
+                if (!this.audioContext || freq === 0) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                oscillator.detune.setValueAtTime(detune, this.audioContext.currentTime);
+                
+                const now = this.audioContext.currentTime;
+                gainNode.gain.setValueAtTime(volume, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.9);
+                
+                oscillator.start(now);
+                oscillator.stop(now + duration);
+            }
+
+            start() {
+                if (!this.enabled || this.isPlaying) return;
+                this.init();
+                
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                this.isPlaying = true;
+                this.melodyIndex = 0;
+                this.bassIndex = 0;
+                this.lastMelodyTime = 0;
+                this.lastBassTime = 0;
+                
+                const startTime = Date.now();
+                
+                this.intervalId = setInterval(() => {
+                    if (!this.isPlaying || !this.enabled) return;
+                    
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    
+                    // Play melody
+                    if (elapsed >= this.lastMelodyTime) {
+                        const note = this.melody[this.melodyIndex];
+                        if (note.note > 0) {
+                            this.playNote(note.note, note.duration, 'square', 0.08);
+                        }
+                        this.lastMelodyTime = elapsed + note.duration;
+                        this.melodyIndex = (this.melodyIndex + 1) % this.melody.length;
+                    }
+                    
+                    // Play bass
+                    if (elapsed >= this.lastBassTime) {
+                        const bass = this.bassLine[this.bassIndex];
+                        if (bass.note > 0) {
+                            this.playNote(bass.note, bass.duration * 0.8, 'triangle', 0.12);
+                        }
+                        this.lastBassTime = elapsed + bass.duration;
+                        this.bassIndex = (this.bassIndex + 1) % this.bassLine.length;
+                    }
+                }, 50);
+            }
+
+            stop() {
+                this.isPlaying = false;
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+            }
+        }
+
         // Sound Manager using Web Audio API
         class SoundManager {
             constructor() {
@@ -515,7 +666,6 @@
             play(type) {
                 if (!this.enabled || !this.audioContext) return;
 
-                // Resume context if suspended (iOS requirement)
                 if (this.audioContext.state === 'suspended') {
                     this.audioContext.resume();
                 }
@@ -540,20 +690,7 @@
                         oscillator.stop(now + 0.15);
                         break;
 
-                    case 'combo':
-                        // Exciting combo sound
-                        oscillator.type = 'sine';
-                        oscillator.frequency.setValueAtTime(523, now); // C5
-                        oscillator.frequency.setValueAtTime(659, now + 0.08); // E5
-                        oscillator.frequency.setValueAtTime(784, now + 0.16); // G5
-                        gainNode.gain.setValueAtTime(0.25, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                        oscillator.start(now);
-                        oscillator.stop(now + 0.3);
-                        break;
-
                     case 'miss':
-                        // Whoosh sound for miss
                         oscillator.type = 'sine';
                         oscillator.frequency.setValueAtTime(300, now);
                         oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.1);
@@ -564,39 +701,36 @@
                         break;
 
                     case 'start':
-                        // Game start fanfare
-                        oscillator.type = 'sine';
-                        oscillator.frequency.setValueAtTime(262, now); // C4
-                        oscillator.frequency.setValueAtTime(330, now + 0.1); // E4
-                        oscillator.frequency.setValueAtTime(392, now + 0.2); // G4
-                        oscillator.frequency.setValueAtTime(523, now + 0.3); // C5
-                        gainNode.gain.setValueAtTime(0.25, now);
-                        gainNode.gain.setValueAtTime(0.25, now + 0.35);
+                        oscillator.type = 'square';
+                        oscillator.frequency.setValueAtTime(262, now);
+                        oscillator.frequency.setValueAtTime(330, now + 0.1);
+                        oscillator.frequency.setValueAtTime(392, now + 0.2);
+                        oscillator.frequency.setValueAtTime(523, now + 0.3);
+                        gainNode.gain.setValueAtTime(0.2, now);
+                        gainNode.gain.setValueAtTime(0.2, now + 0.35);
                         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
                         oscillator.start(now);
                         oscillator.stop(now + 0.5);
                         break;
 
                     case 'end':
-                        // Game over sound
-                        oscillator.type = 'sine';
-                        oscillator.frequency.setValueAtTime(392, now); // G4
-                        oscillator.frequency.setValueAtTime(330, now + 0.15); // E4
-                        oscillator.frequency.setValueAtTime(262, now + 0.3); // C4
-                        gainNode.gain.setValueAtTime(0.25, now);
+                        oscillator.type = 'square';
+                        oscillator.frequency.setValueAtTime(392, now);
+                        oscillator.frequency.setValueAtTime(330, now + 0.15);
+                        oscillator.frequency.setValueAtTime(262, now + 0.3);
+                        gainNode.gain.setValueAtTime(0.2, now);
                         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
                         oscillator.start(now);
                         oscillator.stop(now + 0.5);
                         break;
 
                     case 'tick':
-                        // Warning tick for last 10 seconds
-                        oscillator.type = 'sine';
+                        oscillator.type = 'square';
                         oscillator.frequency.setValueAtTime(880, now);
-                        gainNode.gain.setValueAtTime(0.15, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                        gainNode.gain.setValueAtTime(0.1, now);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
                         oscillator.start(now);
-                        oscillator.stop(now + 0.08);
+                        oscillator.stop(now + 0.05);
                         break;
                 }
             }
@@ -624,12 +758,14 @@
                 this.comboDisplay = document.getElementById('combo');
                 this.diffBtns = document.querySelectorAll('.diff-btn');
                 this.soundToggle = document.getElementById('soundToggle');
+                this.musicToggle = document.getElementById('musicToggle');
 
                 this.moleTimer = null;
                 this.gameTimer = null;
                 this.currentMole = null;
 
                 this.sound = new SoundManager();
+                this.music = new MusicPlayer();
 
                 this.init();
             }
@@ -637,6 +773,7 @@
             init() {
                 this.startBtn.addEventListener('click', () => {
                     this.sound.init();
+                    this.music.init();
                     this.startGame();
                 });
                 this.restartBtn.addEventListener('click', () => this.restartGame());
@@ -645,6 +782,15 @@
                     const enabled = this.sound.toggle();
                     this.soundToggle.textContent = enabled ? '🔊' : '🔇';
                     this.soundToggle.classList.toggle('muted', !enabled);
+                });
+
+                this.musicToggle.addEventListener('click', () => {
+                    const enabled = this.music.toggle();
+                    this.musicToggle.textContent = enabled ? '🎵' : '🎵';
+                    this.musicToggle.classList.toggle('muted', !enabled);
+                    if (enabled && this.isPlaying) {
+                        this.music.start();
+                    }
                 });
 
                 this.holes.forEach(hole => {
@@ -675,9 +821,7 @@
                 if ('vibrate' in navigator) {
                     try {
                         navigator.vibrate(pattern);
-                    } catch (e) {
-                        // Vibration not supported or failed
-                    }
+                    } catch (e) {}
                 }
             }
 
@@ -693,13 +837,15 @@
 
                 this.sound.play('start');
                 this.vibrate([100, 50, 100]);
+                
+                // Start background music
+                this.music.start();
 
                 this.showMole();
                 this.gameTimer = setInterval(() => {
                     this.timeLeft--;
                     this.updateProgressBar();
                     
-                    // Play tick sound in last 10 seconds
                     if (this.timeLeft <= 10 && this.timeLeft > 0) {
                         this.sound.play('tick');
                     }
@@ -724,24 +870,21 @@
             showMole() {
                 if (!this.isPlaying) return;
 
-                // Hide current mole
                 if (this.currentMole) {
                     this.currentMole.classList.remove('active');
                 }
 
-                // Pick random hole
                 const randomIndex = Math.floor(Math.random() * this.holes.length);
                 const hole = this.holes[randomIndex];
                 
                 hole.classList.add('active');
                 this.currentMole = hole;
 
-                // Schedule next mole
                 const variation = Math.random() * 400 - 200;
                 this.moleTimer = setTimeout(() => {
                     if (hole.classList.contains('active')) {
                         hole.classList.remove('active');
-                        this.combo = 0; // Reset combo if missed
+                        this.combo = 0;
                         this.sound.play('miss');
                     }
                     this.showMole();
@@ -754,7 +897,6 @@
                 const mole = hole.querySelector('.mole');
                 const hitEffect = hole.querySelector('.hit-effect');
 
-                // Calculate points with combo
                 const now = Date.now();
                 if (now - this.lastHitTime < 1500) {
                     this.combo++;
@@ -767,19 +909,19 @@
                 if (this.combo >= 3) {
                     points = 10 * this.combo;
                     this.showCombo();
-                    this.sound.play('combo');
                     this.vibrate([50, 30, 50, 30, 100]);
                 } else {
-                    this.sound.play('hit');
                     this.vibrate(80);
                 }
+                
+                // Always play the same hit sound
+                this.sound.play('hit');
 
                 hitEffect.textContent = `+${points}`;
 
                 this.score += points;
                 this.updateScore();
 
-                // Animations
                 mole.classList.add('hit');
                 hitEffect.classList.add('show');
                 hole.classList.remove('active');
@@ -811,10 +953,12 @@
                     this.currentMole.classList.remove('active');
                 }
 
+                // Stop background music
+                this.music.stop();
+
                 this.sound.play('end');
                 this.vibrate([200, 100, 200]);
 
-                // Check high score
                 const isNewRecord = this.score > this.highScore;
                 if (isNewRecord) {
                     this.highScore = this.score;
@@ -822,7 +966,6 @@
                     this.vibrate([100, 50, 100, 50, 100, 50, 300]);
                 }
 
-                // Show game over screen
                 this.finalScore.textContent = this.score;
                 if (isNewRecord && this.score > 0) {
                     this.highScoreText.innerHTML = '<span class="new-record">🎉 新纪录!</span>';
@@ -841,7 +984,6 @@
             }
         }
 
-        // Initialize game
         document.addEventListener('DOMContentLoaded', () => {
             new WhackAMole();
         });
